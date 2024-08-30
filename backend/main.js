@@ -8,7 +8,17 @@ app.use(cors());
 
 app.get("/possession", async (req, res) => {
     const data = await readFile("./data.json");
-    res.json(data);
+    res.send(data);
+});
+
+app.post("/possession", async (req, res) => {
+    const { libelle, valeur, dateDebut, dateFin, taux } = req.body;
+    const data = await readFile("./data.json");
+    const possessions = data.data[1].data.possessions;
+    const newPossession = { libelle, valeur, dateDebut, dateFin, taux };
+    possessions.push(newPossession);
+    await writeFile("./data.json", data);
+    res.status(201).json(newPossession);
 });
 
 app.put("/possession/:libelle", async (req, res) => {
@@ -27,33 +37,7 @@ app.put("/possession/:libelle", async (req, res) => {
     }
 });
 
-app.post("/possession", async (req, res) => {
-    const { libelle, valeur, dateDebut, dateFin, taux } = req.body;
-    const data = await readFile("./data.json");
-    const possessions = data.data[1].data.possessions;
-    const newPossession = { libelle, valeur, dateDebut, dateFin, taux };
-    possessions.push(newPossession);
-    await writeFile("./data.json", data);
-    res.status(201).json(newPossession);
-});
-
-app.get("/patrimoine/range", async (req, res) => {
-    const { dateDebut, dateFin, jour, type } = req.query; 
-
-    const data = await readFile("./data.json");
-    const possessions = data.data[1].data.possessions;
-
-    const filteredPossessions = possessions.filter(p => {
-        const isInRange = new Date(p.dateDebut) >= new Date(dateDebut) &&
-            new Date(p.dateFin) <= new Date(dateFin);
-        return isInRange;
-    });
-
-    const totalValue = filteredPossessions.reduce((sum, p) => sum + p.valeur, 0);
-    res.json({ totalValue });
-});
-
-app.put("/possession/:libelle/close", async (req, res) => {
+app.post("/possession/:libelle/close", async (req, res) => {
     const { libelle } = req.params;
     const currentDate = new Date().toISOString();
 
@@ -70,19 +54,32 @@ app.put("/possession/:libelle/close", async (req, res) => {
     }
 });
 
-app.get("/patrimoine/:valeur", async (req, res) => {
-    const { valeur } = req.params;
+
+app.get("/patrimoine/:date", async (req, res) => {
+    const { date } = req.params;
 
     const data = await readFile("./data.json");
     const possessions = data.data[1].data.possessions;
     const filteredPossessions = possessions.filter(p => p.valeur <= parseFloat(valeur));
-    res.json(filteredPossessions);
+    res.send(filteredPossessions);
 });
 
-app.post("/newValue", async (req, res) => {
-    const body = req.body;
-    res.status(201).json(body);
+app.post("/patrimoine/range", async (req, res) => {
+    const { dateDebut, dateFin, jour, type } = req.query; 
+
+    const data = await readFile("./data.json");
+    const possessions = data.data[1].data.possessions;
+
+    const filteredPossessions = possessions.filter(p => {
+        const isInRange = new Date(p.dateDebut) >= new Date(dateDebut) &&
+            new Date(p.dateFin) <= new Date(dateFin);
+        return isInRange;
+    });
+
+    const totalValue = filteredPossessions.reduce((sum, p) => sum + p.valeur, 0);
+    res.json({ totalValue });
 });
+
 
 app.listen(3000, () => {
     console.log("Server running on port 3000");
