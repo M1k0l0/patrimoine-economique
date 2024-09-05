@@ -1,86 +1,124 @@
-import express from "express";
-import { readFile, writeFile } from "../data/index.js";
-import cors from "cors";
+const express = require('express');
+const json = require('body-parser').json;
+const cors = require('cors');
 
 const app = express();
-app.use(express.json());
+const port = 3000;
+
 app.use(cors());
+app.use(json());
 
-app.get("/possession", async (req, res) => {
-    const data = await readFile("./data.json");
-    res.send(data);
-});
-
-app.post("/possession", async (req, res) => {
-    const { libelle, valeur, dateDebut, dateFin, taux } = req.body;
-    const data = await readFile("./data.json");
-    const possessions = data.data[1].data.possessions;
-    const newPossession = { libelle, valeur, dateDebut, dateFin, taux };
-    possessions.push(newPossession);
-    await writeFile("./data.json", data);
-    res.status(201).json(newPossession);
-});
-
-app.put("/possession/:libelle", async (req, res) => {
-    const { libelle } = req.params;
-    const { dateFin } = req.body;
-    const data = await readFile("./data.json");
-    const possessions = data.data[1].data.possessions;
-    const possession = possessions.find(p => p.libelle === libelle);
-
-    if (possession) {
-        possession.dateFin = dateFin;
-        await writeFile("./data.json", data);
-        res.json(possession);
-    } else {
-        res.status(404).json({ error: 'Possession not found' });
+let possessions = [
+    {
+        "possesseur": {
+            "nom": "John Doe"
+        },
+        "libelle": "MacBook Pro",
+        "valeur": 4300000,
+        "dateDebut": "2023-12-25T00:00:00.000Z",
+        "dateFin": null,
+        "tauxAmortissement": 5
+    },
+    {
+        "possesseur": {
+            "nom": "John Doe"
+        },
+        "libelle": "Compte épargne",
+        "valeur": 500000,
+        "dateDebut": "2019-01-06T00:00:00.000Z",
+        "dateFin": null,
+        "tauxAmortissement": -5
+    },
+    {
+        "possesseur": {
+            "nom": "John Doe"
+        },
+        "libelle": "Clothes",
+        "valeur": 2000000,
+        "dateDebut": "2020-01-01T00:00:00.000Z",
+        "dateFin": null,
+        "tauxAmortissement": 10
+    },
+    {
+        "possesseur": {
+            "nom": "John Doe"
+        },
+        "libelle": "Alternance",
+        "valeur": 600000,
+        "dateDebut": "2023-02-13T00:00:00.000Z",
+        "dateFin": null,
+        "tauxAmortissement": 0,
+        "jour": 1,
+        "valeurConstante": 600000
+    },
+    {
+        "possesseur": {
+            "nom": "John Doe"
+        },
+        "libelle": "Survie",
+        "valeur": 300000,
+        "dateDebut": "2023-02-13T00:00:00.000Z",
+        "dateFin": null,
+        "tauxAmortissement": 0,
+        "jour": 2,
+        "valeurConstante": -300000
+    },
+    {
+        "possesseur": {
+            "nom": "John Doe"
+        },
+        "libelle": "Redmi Note 9",
+        "valeur": 800000,
+        "dateDebut": "2022-12-29T00:00:00.000Z",
+        "dateFin": null,
+        "tauxAmortissement": 15
     }
+];
+
+app.get('/', (req, res) => {
+  res.send('Welcome to the API!');
 });
 
-app.post("/possession/:libelle/close", async (req, res) => {
-    const { libelle } = req.params;
-    const currentDate = new Date().toISOString();
-
-    const data = await readFile("./data.json");
-    const possessions = data.data[1].data.possessions;
-    const possession = possessions.find(p => p.libelle === libelle);
-
-    if (possession) {
-        possession.dateFin = currentDate;
-        await writeFile("./data.json", data);
-        res.json(possession);
-    } else {
-        res.status(404).json({ error: 'Possession not found' });
-    }
+app.get('/possession', (req, res) => {
+  res.json(possessions);
 });
 
-
-app.get("/patrimoine/:date", async (req, res) => {
-    const { date } = req.params;
-
-    const data = await readFile("./data.json");
-    const possessions = data.data[1].data.possessions;
-    const filteredPossessions = possessions.filter(p => p.valeur <= parseFloat(valeur));
-    res.send(filteredPossessions);
+app.post('/possession', (req, res) => {
+  const { libelle, valeur, dateDebut, tauxAmortissement } = req.body;
+  const newPossession = { 
+    libelle, 
+    valeur, 
+    dateDebut, 
+    tauxAmortissement,
+    dateFin: null 
+  };
+  possessions.push(newPossession);
+  res.status(201).json(newPossession);
 });
 
-app.post("/patrimoine/range", async (req, res) => {
-    const { dateDebut, dateFin, jour, type } = req.query; 
-
-    const data = await readFile("./data.json");
-    const possessions = data.data[1].data.possessions;
-
-    const filteredPossessions = possessions.filter(p => {
-        const isInRange = new Date(p.dateDebut) >= new Date(dateDebut) &&
-            new Date(p.dateFin) <= new Date(dateFin);
-        return isInRange;
-    });
-
-    const totalValue = filteredPossessions.reduce((sum, p) => sum + p.valeur, 0);
-    res.json({ totalValue });
+app.put('/possession/:libelle/edit', (req, res) => {
+  const { libelle } = req.params;
+  const updatedDetails = req.body;
+  const possession = possessions.find(p => p.libelle === libelle);
+  if (possession) {
+    Object.assign(possession, updatedDetails);
+    res.json(possession);
+  } else {
+    res.status(404).json({ error: 'Possession not found' });
+  }
 });
 
+app.post('/possession/:libelle/close', (req, res) => {
+  const { libelle } = req.params;
+  const possession = possessions.find(p => p.libelle === libelle);
+  if (possession) {
+    possession.dateFin = new Date().toISOString();
+    res.json(possession);
+  } else {
+    res.status(404).json({ error: 'Possession not found' });
+  }
+});
 
-app.listen(3000, () => {
-    console.log("Server running on port 3000");
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
 });
