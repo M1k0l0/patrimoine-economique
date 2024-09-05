@@ -1,21 +1,22 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import Header from '../chart/header';
-import Patrimoine from '../chart/patrimoine';
-import CreatePossession from '../chart/createPossession';
-import UpdatePossession from '../chart/updatePossession';
-import LineChart from '../line/line';
-import PossessionLIst from '../chart/listPossession';
+import { BrowserRouter, Route, Routes} from 'react-router-dom';
+import Possessions from './ListPossession';
+import Header from './Header';
+import PatrimoineSite from './PatrimoinePage';
 
 function App() {
   return (
-    <>
-    <Header/>
-      <Patrimoine/>
-      <LineChart/>
-      <PossessionLIst/>
-      <CreatePossession/>
-      <UpdatePossession/>
-    </>
-  )
+    <div>
+    <Header />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Possessions />} />
+        <Route path="/patrimoine" element={<PatrimoineSite />} />
+      </Routes>
+    </BrowserRouter>
+    </div>
+  );
 }
+
+
+export default App;

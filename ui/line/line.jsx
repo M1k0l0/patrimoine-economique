@@ -8,10 +8,10 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 const LineChart = () => {
     const data = {
-        labels: ['January', 'February', 'March', 'April'],
+        labels: [],
         datasets: [
             {
-                label: 'Possession',
+                label: 'Patrimoine',
                 data: [0, 4, 5, 2],
                 borderColor: 'rgba(75, 192, 192, 1)',
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
@@ -28,7 +28,7 @@ const LineChart = () => {
             },
             title: {
                 display: true,
-                text: 'Monthly Possession',
+                text: 'Valeur Patrimoine',
             },
         },
     };
